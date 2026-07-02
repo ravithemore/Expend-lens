@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 
 interface SettingsDrawerProps {
   isOpen: boolean;
@@ -18,7 +19,13 @@ export default function SettingsDrawer({ isOpen, onClose, userEmail }: SettingsD
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedName = localStorage.getItem('spendLens_profileName');
-      if (savedName) setProfileName(savedName);
+      if (savedName) {
+        setProfileName(savedName);
+      } else if (userEmail) {
+        const namePart = userEmail.split('@')[0];
+        const capitalized = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+        setProfileName(capitalized);
+      }
 
       const savedAvatar = localStorage.getItem('spendLens_avatarIndex');
       if (savedAvatar) setAvatarIndex(parseInt(savedAvatar, 10));
@@ -32,7 +39,7 @@ export default function SettingsDrawer({ isOpen, onClose, userEmail }: SettingsD
       const wk = localStorage.getItem('spendLens_wkAlerts');
       if (wk) setWeeklyAlerts(wk === 'true');
     }
-  }, [isOpen]);
+  }, [isOpen, userEmail]);
 
   const handleSave = () => {
     if (typeof window !== 'undefined') {
@@ -48,11 +55,21 @@ export default function SettingsDrawer({ isOpen, onClose, userEmail }: SettingsD
 
   if (!isOpen) return null;
 
+  const getInitials = (name: string) => {
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 0 || !parts[0]) return 'RV';
+    if (parts.length === 1) {
+      return parts[0].substring(0, 2).toUpperCase();
+    }
+    return (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase();
+  };
+
+  const initials = getInitials(profileName);
   const avatars = [
-    { bg: 'bg-[#6d5ef9]', text: 'RV', label: 'Indigo Core' },
-    { bg: 'bg-[#4b6a4f]', text: 'RV', label: 'Forest Green' },
-    { bg: 'bg-[#ba1a1a]', text: 'RV', label: 'Sunset Red' },
-    { bg: 'bg-[#007fac]', text: 'RV', label: 'Sky Blue' },
+    { bg: 'bg-[#6d5ef9]', text: initials, label: 'Indigo Core' },
+    { bg: 'bg-[#4b6a4f]', text: initials, label: 'Forest Green' },
+    { bg: 'bg-[#ba1a1a]', text: initials, label: 'Sunset Red' },
+    { bg: 'bg-[#007fac]', text: initials, label: 'Sky Blue' },
   ];
 
   return (
@@ -80,7 +97,7 @@ export default function SettingsDrawer({ isOpen, onClose, userEmail }: SettingsD
               <span className="material-symbols-outlined text-sm">close</span>
             </button>
           </div>
-
+ 
           <div className="flex-1 overflow-y-auto space-y-6 pr-1">
             {/* Avatar selection grid */}
             <div className="flex flex-col gap-3">
@@ -99,7 +116,7 @@ export default function SettingsDrawer({ isOpen, onClose, userEmail }: SettingsD
                         idx === avatarIndex ? 'border-primary scale-110 shadow-sm' : 'border-transparent opacity-60 hover:opacity-100'
                       }`}
                     >
-                      <span className="text-[10px] text-white font-bold">RV</span>
+                      <span className="text-[10px] text-white font-bold">{av.text}</span>
                     </button>
                   ))}
                 </div>
@@ -174,6 +191,22 @@ export default function SettingsDrawer({ isOpen, onClose, userEmail }: SettingsD
                 </div>
               </div>
             </div>
+
+            {/* Quick Links */}
+            <div className="flex flex-col gap-3 pt-4 border-t border-outline-variant/20">
+              <label className="text-xs font-bold text-on-surface-variant/80 uppercase tracking-wider">Help & Legal</label>
+              <div className="flex flex-col gap-2">
+                <Link href="/privacy" className="flex items-center justify-between text-xs text-on-surface-variant hover:text-primary transition-all py-1.5 border-b border-outline-variant/10 cursor-pointer">
+                  <span>Privacy Policy & Security Info</span>
+                  <span className="material-symbols-outlined text-sm font-bold">arrow_forward</span>
+                </Link>
+                <Link href="/terms" className="flex items-center justify-between text-xs text-on-surface-variant hover:text-primary transition-all py-1.5 cursor-pointer">
+                  <span>Terms of Service</span>
+                  <span className="material-symbols-outlined text-sm font-bold">arrow_forward</span>
+                </Link>
+              </div>
+            </div>
+
           </div>
 
           {/* Action Footer */}

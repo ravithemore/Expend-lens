@@ -20,16 +20,6 @@ export default function InvestmentsPage() {
     setMounted(true);
   }, []);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedName = localStorage.getItem('spendLens_profileName');
-      if (savedName) setDisplayName(savedName);
-
-      const savedAvatar = localStorage.getItem('spendLens_avatarIndex');
-      if (savedAvatar) setAvatarIndex(parseInt(savedAvatar, 10));
-    }
-  }, []);
-
   const { data: user, error: userError } = useQuery({
     queryKey: ['me'],
     queryFn: () => api.me(),
@@ -42,6 +32,23 @@ export default function InvestmentsPage() {
       router.push('/login');
     }
   }, [userError, mounted, router]);
+
+  // Load profile name and avatar from local storage or fallback to email prefix
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedName = localStorage.getItem('spendLens_profileName');
+      if (savedName) {
+        setDisplayName(savedName);
+      } else if (user?.email) {
+        const namePart = user.email.split('@')[0];
+        const capitalized = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+        setDisplayName(capitalized);
+      }
+
+      const savedAvatar = localStorage.getItem('spendLens_avatarIndex');
+      if (savedAvatar) setAvatarIndex(parseInt(savedAvatar, 10));
+    }
+  }, [user]);
 
   if (!mounted) {
     return (
@@ -62,11 +69,21 @@ export default function InvestmentsPage() {
     }
   };
 
+  const getInitials = (name: string) => {
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 0 || !parts[0]) return 'RV';
+    if (parts.length === 1) {
+      return parts[0].substring(0, 2).toUpperCase();
+    }
+    return (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase();
+  };
+
+  const initials = getInitials(displayName);
   const avatars = [
-    { bg: 'bg-[#6d5ef9]', text: 'RV' },
-    { bg: 'bg-[#4b6a4f]', text: 'RV' },
-    { bg: 'bg-[#ba1a1a]', text: 'RV' },
-    { bg: 'bg-[#007fac]', text: 'RV' }
+    { bg: 'bg-[#6d5ef9]', text: initials },
+    { bg: 'bg-[#4b6a4f]', text: initials },
+    { bg: 'bg-[#ba1a1a]', text: initials },
+    { bg: 'bg-[#007fac]', text: initials }
   ];
 
   // SVG Spline coordinates representing portfolio growth over 6 months

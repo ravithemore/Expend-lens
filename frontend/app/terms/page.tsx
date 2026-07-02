@@ -10,7 +10,10 @@ export default function TermsPage() {
       <div className="flex justify-between items-center max-w-4xl mx-auto w-full mb-8">
         <Link href="/" className="flex items-center gap-2">
           <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-sm shadow-primary/20">
-            <span className="material-symbols-outlined text-white text-[20px]">spa</span>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" className="w-6 h-6 text-white shrink-0">
+              <circle cx="19" cy="15" r="7.5" fill="#ffffff" opacity="0.85" />
+              <path d="M10 6V22H26" stroke="#7c66ff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </div>
           <span className="font-display font-bold text-xl text-on-surface tracking-tight">ExpenseLens</span>
         </Link>

@@ -24,21 +24,43 @@ export default function Home() {
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [isDocOpen, setIsDocOpen] = useState(false);
+  const [isSecurityOpen, setIsSecurityOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Load profile name and avatar from local storage
+  // Queries
+  const { data: user, error: userError } = useQuery({
+    queryKey: ['me'],
+    queryFn: () => api.me(),
+    enabled: mounted,
+    retry: false,
+  });
+
+  useEffect(() => {
+    if (mounted && userError) {
+      router.push('/login');
+    }
+  }, [userError, mounted, router]);
+
+  // Load profile name and avatar from local storage or fallback to email prefix
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedName = localStorage.getItem('spendLens_profileName');
-      if (savedName) setDisplayName(savedName);
+      if (savedName) {
+        setDisplayName(savedName);
+      } else if (user?.email) {
+        const namePart = user.email.split('@')[0];
+        const capitalized = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+        setDisplayName(capitalized);
+      }
 
       const savedAvatar = localStorage.getItem('spendLens_avatarIndex');
       if (savedAvatar) setAvatarIndex(parseInt(savedAvatar, 10));
     }
-  }, []);
+  }, [user]);
 
   // Keyboard shortcut listener to focus search input on Cmd+K / Ctrl+K
   useEffect(() => {
@@ -64,20 +86,6 @@ export default function Home() {
       return () => clearTimeout(timer);
     }
   }, [toastMessage]);
-
-  // Queries
-  const { data: user, error: userError } = useQuery({
-    queryKey: ['me'],
-    queryFn: () => api.me(),
-    enabled: mounted,
-    retry: false,
-  });
-
-  useEffect(() => {
-    if (mounted && userError) {
-      router.push('/login');
-    }
-  }, [userError, mounted, router]);
 
   const { data: summary } = useQuery({
     queryKey: ['summary'],
@@ -209,17 +217,28 @@ export default function Home() {
     }
   };
 
+  const getInitials = (name: string) => {
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 0 || !parts[0]) return 'RV';
+    if (parts.length === 1) {
+      return parts[0].substring(0, 2).toUpperCase();
+    }
+    return (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase();
+  };
+
+  const initials = getInitials(displayName);
   const avatars = [
-    { bg: 'bg-[#6d5ef9]', text: 'RV' },
-    { bg: 'bg-[#4b6a4f]', text: 'RV' },
-    { bg: 'bg-[#ba1a1a]', text: 'RV' },
-    { bg: 'bg-[#007fac]', text: 'RV' }
+    { bg: 'bg-[#6d5ef9]', text: initials },
+    { bg: 'bg-[#4b6a4f]', text: initials },
+    { bg: 'bg-[#ba1a1a]', text: initials },
+    { bg: 'bg-[#007fac]', text: initials }
   ];
 
   // Render Ingestion Landing Empty State (Image 1)
   const renderLandingState = () => {
     return (
-      <div className="min-h-screen flex flex-col justify-between bg-[#f8f9fc] font-body text-on-surface p-6">
+      <>
+        <div className="min-h-screen flex flex-col justify-between bg-[#f8f9fc] font-body text-on-surface p-6">
         {/* Top Header Bar */}
         <div className="flex justify-between items-center max-w-7xl mx-auto w-full mb-8">
           <div className="flex items-center gap-2">
@@ -236,11 +255,11 @@ export default function Home() {
             <span className="font-display font-bold text-xl text-on-surface tracking-tight">ExpenseLens</span>
           </div>
           <div className="flex items-center gap-6 text-xs font-semibold text-on-surface-variant/80">
-            <a href="#" className="hover:text-primary transition-colors">Documentation</a>
-            <a href="#" className="hover:text-primary transition-colors">Security</a>
+            <button onClick={() => setIsDocOpen(true)} className="hover:text-primary transition-colors cursor-pointer">Documentation</button>
+            <button onClick={() => setIsSecurityOpen(true)} className="hover:text-primary transition-colors cursor-pointer">Security</button>
             <button 
               onClick={handleLogout}
-              className="px-5 py-2.5 bg-[#ece9ff] text-primary text-xs font-bold rounded-full hover:bg-primary-container/80 transition-all border border-primary/10"
+              className="px-5 py-2.5 bg-[#ece9ff] text-primary text-xs font-bold rounded-full hover:bg-primary-container/80 transition-all border border-primary/10 cursor-pointer"
             >
               Sign Out
             </button>
@@ -379,6 +398,90 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* Documentation Modal */}
+      {isDocOpen && (
+        <div className="fixed inset-0 z-50 overflow-hidden font-body text-on-surface select-none animate-fade-in">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={() => setIsDocOpen(false)} />
+          <div className="absolute inset-0 flex items-center justify-center p-4">
+            <div className="w-full max-w-2xl bg-white rounded-3xl border border-outline-variant/30 flex flex-col p-6 shadow-2xl overflow-y-auto max-h-[85vh] gap-4">
+              <div className="flex justify-between items-center pb-3 border-b border-outline-variant/20">
+                <div>
+                  <h3 className="font-display font-semibold text-lg text-primary">Quick Start & Documentation</h3>
+                  <p className="text-[10px] text-on-surface-variant/80">Learn how to make the most of ExpenseLens</p>
+                </div>
+                <button onClick={() => setIsDocOpen(false)} className="w-8 h-8 rounded-full bg-surface-container-low hover:bg-surface-container-high flex items-center justify-center border border-outline-variant/30 cursor-pointer">
+                  <span className="material-symbols-outlined text-sm">close</span>
+                </button>
+              </div>
+              
+              <div className="text-xs text-on-surface-variant/90 space-y-4 leading-relaxed pr-1">
+                <div>
+                  <h4 className="font-bold text-on-surface mb-1">1. Bank Statement Ingestion</h4>
+                  <p>ExpenseLens parses your raw statement exports without sending them to third-party processors. Drag and drop your bank CSV to begin processing. You can find sample statements configured for upload in the repository.</p>
+                </div>
+                <div>
+                  <h4 className="font-bold text-on-surface mb-1">2. Duplicate Protection</h4>
+                  <p>Our database engine compares transaction dates, merchant descriptions, and amounts. Uploading the same statement multiple times is safe and won't distort your calculations.</p>
+                </div>
+                <div>
+                  <h4 className="font-bold text-on-surface mb-1">3. Automated Financial Insights</h4>
+                  <p>Our algorithms run real-time checks to identify monthly subscription spikes, anomalies (unusual transfers), and merchant spending patterns.</p>
+                </div>
+                <div className="p-3 bg-primary/5 rounded-2xl border border-primary/10">
+                  <p className="font-bold text-primary mb-1">Need test data?</p>
+                  <p>Download the mock statements in the <code>samples/</code> folder on your local filesystem to see full charts instantly.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Security Modal */}
+      {isSecurityOpen && (
+        <div className="fixed inset-0 z-50 overflow-hidden font-body text-on-surface select-none animate-fade-in">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={() => setIsSecurityOpen(false)} />
+          <div className="absolute inset-0 flex items-center justify-center p-4">
+            <div className="w-full max-w-md bg-white rounded-3xl border border-outline-variant/30 flex flex-col p-6 shadow-2xl gap-4">
+              <div className="flex justify-between items-center pb-3 border-b border-outline-variant/20">
+                <div>
+                  <h3 className="font-display font-semibold text-lg text-primary">Security & Privacy</h3>
+                  <p className="text-[10px] text-on-surface-variant/80">Your financial data stays isolated</p>
+                </div>
+                <button onClick={() => setIsSecurityOpen(false)} className="w-8 h-8 rounded-full bg-surface-container-low hover:bg-surface-container-high flex items-center justify-center border border-outline-variant/30 cursor-pointer">
+                  <span className="material-symbols-outlined text-sm">close</span>
+                </button>
+              </div>
+              
+              <div className="text-xs text-on-surface-variant/90 space-y-4 leading-relaxed">
+                <div className="flex gap-3">
+                  <span className="material-symbols-outlined text-primary text-lg">shield</span>
+                  <div>
+                    <h4 className="font-bold text-on-surface">End-to-End Isolation</h4>
+                    <p>All database records are mapped directly to your user ID inside our Neon PostgreSQL server, running with SSL required mode.</p>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <span className="material-symbols-outlined text-primary text-lg">cookie</span>
+                  <div>
+                    <h4 className="font-bold text-on-surface">Secure Session Rules</h4>
+                    <p>Authentication utilizes HTTP-Only, Secure, and SameSite=None JWT cookie policies. Your session is immune to client-side XSS attacks.</p>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <span className="material-symbols-outlined text-primary text-lg">cloud_off</span>
+                  <div>
+                    <h4 className="font-bold text-on-surface">No Third-party Sharing</h4>
+                    <p>Your statement information is never sold, analyzed for advertisements, or cached on unsecured routers.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
     );
   };
 
@@ -744,6 +847,89 @@ export default function Home() {
           onClose={() => setIsSettingsOpen(false)} 
           userEmail={user.email} 
         />
+      )}
+
+      {/* Documentation Modal */}
+      {isDocOpen && (
+        <div className="fixed inset-0 z-50 overflow-hidden font-body text-on-surface select-none">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity animate-fade-in" onClick={() => setIsDocOpen(false)} />
+          <div className="absolute inset-0 flex items-center justify-center p-4">
+            <div className="w-full max-w-2xl bg-white rounded-3xl border border-outline-variant/30 flex flex-col p-6 shadow-2xl overflow-y-auto max-h-[85vh] gap-4 transform transition-all duration-300 scale-100">
+              <div className="flex justify-between items-center pb-3 border-b border-outline-variant/20">
+                <div>
+                  <h3 className="font-display font-semibold text-lg text-primary">Quick Start & Documentation</h3>
+                  <p className="text-[10px] text-on-surface-variant/80">Learn how to make the most of ExpenseLens</p>
+                </div>
+                <button onClick={() => setIsDocOpen(false)} className="w-8 h-8 rounded-full bg-surface-container-low hover:bg-surface-container-high flex items-center justify-center border border-outline-variant/30 cursor-pointer">
+                  <span className="material-symbols-outlined text-sm">close</span>
+                </button>
+              </div>
+              
+              <div className="text-xs text-on-surface-variant/90 space-y-4 leading-relaxed pr-1">
+                <div>
+                  <h4 className="font-bold text-on-surface mb-1">1. Bank Statement Ingestion</h4>
+                  <p>ExpenseLens parses your raw statement exports without sending them to third-party processors. Drag and drop your bank CSV to begin processing. You can find sample statements configured for upload in the repository.</p>
+                </div>
+                <div>
+                  <h4 className="font-bold text-on-surface mb-1">2. Duplicate Protection</h4>
+                  <p>Our database engine compares transaction dates, merchant descriptions, and amounts. Uploading the same statement multiple times is safe and won't distort your calculations.</p>
+                </div>
+                <div>
+                  <h4 className="font-bold text-on-surface mb-1">3. Automated Financial Insights</h4>
+                  <p>Our algorithms run real-time checks to identify monthly subscription spikes, anomalies (unusual transfers), and merchant spending patterns.</p>
+                </div>
+                <div className="p-3 bg-primary/5 rounded-2xl border border-primary/10">
+                  <p className="font-bold text-primary mb-1">Need test data?</p>
+                  <p>Download the mock statements in the <code>samples/</code> folder on your local filesystem to see full charts instantly.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Security Modal */}
+      {isSecurityOpen && (
+        <div className="fixed inset-0 z-50 overflow-hidden font-body text-on-surface select-none">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity animate-fade-in" onClick={() => setIsSecurityOpen(false)} />
+          <div className="absolute inset-0 flex items-center justify-center p-4">
+            <div className="w-full max-w-md bg-white rounded-3xl border border-outline-variant/30 flex flex-col p-6 shadow-2xl gap-4 transform transition-all duration-300 scale-100">
+              <div className="flex justify-between items-center pb-3 border-b border-outline-variant/20">
+                <div>
+                  <h3 className="font-display font-semibold text-lg text-primary">Security & Privacy</h3>
+                  <p className="text-[10px] text-on-surface-variant/80">Your financial data stays isolated</p>
+                </div>
+                <button onClick={() => setIsSecurityOpen(false)} className="w-8 h-8 rounded-full bg-surface-container-low hover:bg-surface-container-high flex items-center justify-center border border-outline-variant/30 cursor-pointer">
+                  <span className="material-symbols-outlined text-sm">close</span>
+                </button>
+              </div>
+              
+              <div className="text-xs text-on-surface-variant/90 space-y-4 leading-relaxed">
+                <div className="flex gap-3">
+                  <span className="material-symbols-outlined text-primary text-lg">shield</span>
+                  <div>
+                    <h4 className="font-bold text-on-surface">End-to-End Isolation</h4>
+                    <p>All database records are mapped directly to your user ID inside our Neon PostgreSQL server, running with SSL required mode.</p>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <span className="material-symbols-outlined text-primary text-lg">cookie</span>
+                  <div>
+                    <h4 className="font-bold text-on-surface">Secure Session Rules</h4>
+                    <p>Authentication utilizes HTTP-Only, Secure, and SameSite=None JWT cookie policies. Your session is immune to client-side XSS attacks.</p>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <span className="material-symbols-outlined text-primary text-lg">cloud_off</span>
+                  <div>
+                    <h4 className="font-bold text-on-surface">No Third-party Sharing</h4>
+                    <p>Your statement information is never sold, analyzed for advertisements, or cached on unsecured routers.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
     </div>
