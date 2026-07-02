@@ -30,11 +30,18 @@ export default function InsightsPage() {
     }
   }, []);
 
-  const { data: user } = useQuery({
+  const { data: user, error: userError } = useQuery({
     queryKey: ['me'],
     queryFn: () => api.me(),
     enabled: mounted,
+    retry: false,
   });
+
+  useEffect(() => {
+    if (mounted && userError) {
+      router.push('/login');
+    }
+  }, [userError, mounted, router]);
 
   const { data: insights, isLoading: isInsightsLoading } = useQuery({
     queryKey: ['insights'],

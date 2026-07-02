@@ -66,11 +66,18 @@ export default function Home() {
   }, [toastMessage]);
 
   // Queries
-  const { data: user } = useQuery({
+  const { data: user, error: userError } = useQuery({
     queryKey: ['me'],
     queryFn: () => api.me(),
     enabled: mounted,
+    retry: false,
   });
+
+  useEffect(() => {
+    if (mounted && userError) {
+      router.push('/login');
+    }
+  }, [userError, mounted, router]);
 
   const { data: summary } = useQuery({
     queryKey: ['summary'],
