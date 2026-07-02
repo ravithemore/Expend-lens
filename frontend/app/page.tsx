@@ -23,6 +23,11 @@ export default function Home() {
   const [stagedFile, setStagedFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Load profile name and avatar from local storage
   useEffect(() => {
@@ -64,26 +69,31 @@ export default function Home() {
   const { data: user } = useQuery({
     queryKey: ['me'],
     queryFn: () => api.me(),
+    enabled: mounted,
   });
 
   const { data: summary } = useQuery({
     queryKey: ['summary'],
     queryFn: () => api.getSummary(),
+    enabled: mounted,
   });
 
   const { data: categories, isLoading: isCategoriesLoading } = useQuery({
     queryKey: ['categories'],
     queryFn: () => api.getCategoryBreakdowns(),
+    enabled: mounted,
   });
 
   const { data: insights } = useQuery({
     queryKey: ['insights'],
     queryFn: () => api.getInsights(),
+    enabled: mounted,
   });
 
   const { data: transactions, isLoading: isTransactionsLoading } = useQuery({
     queryKey: ['transactions'],
     queryFn: () => api.getTransactions(),
+    enabled: mounted,
   });
 
   // Mutations
@@ -96,6 +106,15 @@ export default function Home() {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
     },
   });
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-[#f8f9fc] flex flex-col items-center justify-center font-body text-on-surface">
+        <div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+        <p className="text-xs font-semibold text-on-surface-variant/80 mt-4">Loading ExpenseLens...</p>
+      </div>
+    );
+  }
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();

@@ -14,6 +14,12 @@ export default function InsightsPage() {
   const [displayName, setDisplayName] = useState('Ravi');
   const [avatarIndex, setAvatarIndex] = useState(0);
 
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedName = localStorage.getItem('spendLens_profileName');
@@ -27,12 +33,23 @@ export default function InsightsPage() {
   const { data: user } = useQuery({
     queryKey: ['me'],
     queryFn: () => api.me(),
+    enabled: mounted,
   });
 
   const { data: insights, isLoading: isInsightsLoading } = useQuery({
     queryKey: ['insights'],
     queryFn: () => api.getInsights(),
+    enabled: mounted,
   });
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-[#f8f9fc] flex flex-col items-center justify-center font-body text-on-surface">
+        <div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+        <p className="text-xs font-semibold text-on-surface-variant/80 mt-4">Loading Insights...</p>
+      </div>
+    );
+  }
 
   const handleLogout = async () => {
     try {
