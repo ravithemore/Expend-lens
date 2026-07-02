@@ -1,0 +1,16 @@
+# Dependency folders
+**/node_modules/
+**/.next/
+**/target/
+**/*.class
+
+# System folders
+.DS_Store
+**/.DS_Store
+.idea/
+.vscode/
+
+# Exclude Mock CSVs, Figma designs, and docs folders
+samples/
+stitch_midnight_finance/
+docs/

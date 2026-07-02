@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>SpendLens Wealth Report</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+            @bottom-right {
+                content: "Page " counter(page) " of " counter(pages);
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 8pt;
+                color: #7a7583;
+            }
+        }
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #2b2930;
+            line-height: 1.4;
+            font-size: 10pt;
+            margin: 0;
+            padding: 0;
+        }
+        .header {
+            margin-bottom: 25px;
+            border-bottom: 2px solid #674bb5;
+            padding-bottom: 15px;
+        }
+        .header table {
+            width: 100%;
+        }
+        .brand-title {
+            font-size: 24pt;
+            font-weight: bold;
+            color: #674bb5;
+            margin: 0;
+        }
+        .report-subtitle {
+            font-size: 11pt;
+            color: #7a7583;
+            margin-top: 5px;
+        }
+        .meta-info {
+            text-align: right;
+            font-size: 9pt;
+            color: #7a7583;
+        }
+        .summary-title {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #1c1b1f;
+            margin-top: 25px;
+            margin-bottom: 12px;
+        }
+        /* Summary Cards Table Layout (compiling for Flying Saucer compatibility) */
+        .summary-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 10px;
+            margin-bottom: 20px;
+        }
+        .summary-card {
+            background-color: #f7f2fa;
+            border: 1px solid #e8e0eb;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            width: 25%;
+        }
+        .card-label {
+            font-size: 8pt;
+            text-transform: uppercase;
+            color: #7a7583;
+            margin-bottom: 4px;
+            font-weight: bold;
+        }
+        .card-val {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #674bb5;
+        }
+        .card-val.expense {
+            color: #ba1a1a;
+        }
+        .card-val.savings {
+            color: #47664b;
+        }
+        /* Ledger Table Styling */
+        .ledger-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .ledger-table th {
+            background-color: #674bb5;
+            color: #ffffff;
+            font-weight: bold;
+            text-align: left;
+            padding: 8px 10px;
+            font-size: 9pt;
+        }
+        .ledger-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #e8e0eb;
+            font-size: 9pt;
+        }
+        .ledger-table tr:nth-child(even) {
+            background-color: #faf7fc;
+        }
+        .amount-col {
+            text-align: right;
+            font-weight: bold;
+        }
+        .amount-col.debit {
+            color: #ba1a1a;
+        }
+        .amount-col.credit {
+            color: #47664b;
+        }
+        .transfer-label {
+            font-size: 7.5pt;
+            background-color: #cac4d4;
+            color: #2b2930;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 8pt;
+            color: #7a7583;
+            border-top: 1px solid #e8e0eb;
+            padding-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Panel -->
+    <div class="header">
+        <table>
+            <tr>
+                <td>
+                    <div class="brand-title">SpendLens</div>
+                    <div class="report-subtitle">Personal Financial Wealth Ledger Statement</div>
+                </td>
+                <td class="meta-info">
+                    <strong>Statement Period:</strong> <span th:text="${monthYear}">July 2026</span><br/>
+                    <strong>Generated At:</strong> <span th:text="${generatedAt}">01-Jul-2026 14:00:00</span>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Summary Grid -->
+    <div class="summary-title">Performance Summary Metrics</div>
+    <table class="summary-table">
+        <tr>
+            <td class="summary-card">
+                <div class="card-label">Total Inflow</div>
+                <div class="card-val" th:text="'₹' + ${#numbers.formatDecimal(summary.totalIncome, 1, 'COMMA', 2, 'POINT')}">₹0.00</div>
+            </td>
+            <td class="summary-card">
+                <div class="card-label">Total Outflow</div>
+                <div class="card-val expense" th:text="'₹' + ${#numbers.formatDecimal(summary.totalExpenses, 1, 'COMMA', 2, 'POINT')}">₹0.00</div>
+            </td>
+            <td class="summary-card">
+                <div class="card-label">Net Savings</div>
+                <div class="card-val savings" th:text="'₹' + ${#numbers.formatDecimal(summary.netSavings, 1, 'COMMA', 2, 'POINT')}">₹0.00</div>
+            </td>
+            <td class="summary-card">
+                <div class="card-label">Savings Rate</div>
+                <div class="card-val" th:text="${#numbers.formatDecimal(summary.savingsRate, 1, 2)} + '%'">0.00%</div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Ledger Table -->
+    <div class="summary-title">Transaction Ledger</div>
+    <table class="ledger-table">
+        <thead>
+            <tr>
+                <th style="width: 15%;">Date</th>
+                <th style="width: 40%;">Description</th>
+                <th style="width: 15%;">Category</th>
+                <th style="width: 15%;">Payment Mode</th>
+                <th style="width: 15%; text-align: right;">Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="t : ${transactions}">
+                <td th:text="${#temporals.format(t.transactionDate, 'dd-MMM-yyyy')}">01-Jul-2026</td>
+                <td>
+                    <span th:text="${t.description}">UPI-SWIGGY-ORDER</span>
+                    <span th:if="${t.isInternalTransfer}" class="transfer-label">Transfer</span>
+                </td>
+                <td th:text="${t.category != null ? t.category.name : 'Uncategorized'}">Food & Dining</td>
+                <td th:text="${t.paymentMode}">UPI</td>
+                <td th:classappend="${t.transactionType == 'DEBIT' ? 'amount-col debit' : 'amount-col credit'}"
+                    th:text="${t.transactionType == 'DEBIT' ? '-₹' : '+₹'} + ${#numbers.formatDecimal(t.amount, 1, 'COMMA', 2, 'POINT')}">
+                    -₹0.00
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(transactions)}">
+                <td colspan="5" style="text-align: center; color: #7a7583; padding: 20px;">
+                    No transactions recorded during this period.
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Footer Disclaimer -->
+    <div class="footer">
+        SpendLens Wealth Statement is a privacy-first local financial summary statement compilation.<br/>
+        This document contains strictly confidential user finance data.
+    </div>
+
+</body>
+</html>
