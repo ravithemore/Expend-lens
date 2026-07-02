@@ -10,8 +10,7 @@
 .idea/
 .vscode/
 
-# Exclude Mock CSVs, Figma designs, and docs folders
-samples/
+# Exclude Figma designs and docs folders
 stitch_midnight_finance/
 docs/
 .github/
