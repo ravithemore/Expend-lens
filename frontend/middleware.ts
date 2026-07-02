@@ -2,8 +2,20 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  const jwt = request.cookies.get('jwt')?.value;
   const { pathname } = request.nextUrl;
+
+  // 1. Skip static assets and internal next paths immediately
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/api') ||
+    pathname.startsWith('/assets') ||
+    pathname === '/favicon.ico' ||
+    pathname === '/favicon.svg'
+  ) {
+    return NextResponse.next();
+  }
+
+  const jwt = request.cookies.get('jwt')?.value;
 
   const isAuthRequired = pathname === '/' || pathname.startsWith('/wrapped') || pathname.startsWith('/investments') || pathname.startsWith('/insights');
   const isGuestOnly = pathname.startsWith('/login') || pathname.startsWith('/register');
@@ -24,15 +36,6 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - assets (static symbols)
-     */
-    '/((?!api|_next/static|_next/image|favicon.ico|assets).*)',
-  ],
+  // Safe wild-card matcher; filters are processed programmatically above
+  matcher: ['/:path*'],
 };
