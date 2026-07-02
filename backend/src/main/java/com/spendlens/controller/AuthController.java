@@ -81,12 +81,15 @@ public class AuthController {
     @PostMapping("/logout")
     @Operation(summary = "Destroy active user session and clear cookies")
     public ResponseEntity<?> logout(HttpServletResponse response) {
+        String allowedOrigin = System.getenv("FRONTEND_URL");
+        boolean isProduction = allowedOrigin != null && !allowedOrigin.contains("localhost");
+
         ResponseCookie cookie = ResponseCookie.from("jwt", "")
                 .httpOnly(true)
-                .secure(false)
+                .secure(isProduction)
                 .path("/")
                 .maxAge(0)
-                .sameSite("Lax")
+                .sameSite(isProduction ? "None" : "Lax")
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         return ResponseEntity.ok().build();
@@ -105,12 +108,15 @@ public class AuthController {
     }
 
     private void setJwtCookie(HttpServletResponse response, String token) {
+        String allowedOrigin = System.getenv("FRONTEND_URL");
+        boolean isProduction = allowedOrigin != null && !allowedOrigin.contains("localhost");
+
         ResponseCookie cookie = ResponseCookie.from("jwt", token)
                 .httpOnly(true)
-                .secure(false)
+                .secure(isProduction)
                 .path("/")
                 .maxAge(24 * 60 * 60)
-                .sameSite("Lax")
+                .sameSite(isProduction ? "None" : "Lax")
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
