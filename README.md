@@ -60,11 +60,11 @@ npm run dev
 ## 📂 Testing with Mock Statements
 
 We have created some ready-to-use mock statement files so you don't have to upload your real bank data to test it. You can find them in your workspace folder:
-* **HDFC Statement:** `/samples/hdfc_statement.csv`
-* **SBI Statement:** `/samples/sbi_statement.csv`
-* **ICICI Statement:** `/samples/icici_statement.csv`
-* **Axis Statement:** `/samples/axis_statement.csv`
-* **Massive 20-row Statement:** `/samples/massive_statement.csv` *(Best for seeing the curved Weekly Flow graph in action!)*
+* **HDFC Statement:** [`/samples/hdfc_statement.csv`](https://github.com/ravithemore/Expend-lens/blob/main/samples/hdfc_statement.csv)
+* **SBI Statement:** [`/samples/sbi_statement.csv`](https://github.com/ravithemore/Expend-lens/blob/main/samples/sbi_statement.csv)
+* **ICICI Statement:** [`/samples/icici_statement.csv`](https://github.com/ravithemore/Expend-lens/blob/main/samples/icici_statement.csv)
+* **Axis Statement:** [`/samples/axis_statement.csv`](https://github.com/ravithemore/Expend-lens/blob/main/samples/axis_statement.csv)
+* **Massive 20-row Statement:** [`/samples/massive_statement.csv`](https://github.com/ravithemore/Expend-lens/blob/main/samples/massive_statement.csv) *(Best for seeing the curved Weekly Flow graph in action!)*
 
 ---
 
