@@ -169,7 +169,7 @@ export default function InsightsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {insights.map((ins) => {
               const isDNA = ins.insightType === 'SPENDING_DNA';
-              const isWarning = ins.insightType === 'WARNING';
+              const isWarning = ins.insightType === 'ANOMALY';
               return (
                 <div key={ins.id} className="glass-card p-8 rounded-3xl border border-outline-variant/10 flex flex-col gap-4 relative overflow-hidden shadow-sm bg-white">
                   <div className={`absolute top-0 right-0 w-32 h-32 ${isDNA ? 'bg-primary/5' : isWarning ? 'bg-error/5' : 'bg-secondary/5'} rounded-full blur-xl pointer-events-none`} />
