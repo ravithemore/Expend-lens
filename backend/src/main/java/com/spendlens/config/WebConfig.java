@@ -9,8 +9,14 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
+        String allowedOrigin = System.getenv("FRONTEND_URL");
+        if (allowedOrigin == null || allowedOrigin.isEmpty()) {
+            allowedOrigin = "http://localhost:3000";
+        }
+        allowedOrigin = allowedOrigin.replaceAll("/$", "");
+
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:3000") // Explicitly allow frontend origin
+                .allowedOrigins(allowedOrigin)
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);
