@@ -5,15 +5,19 @@ export function middleware(request: NextRequest) {
   const jwt = request.cookies.get('jwt')?.value;
   const { pathname } = request.nextUrl;
 
-  const isAuthRequired = pathname === '/' || pathname.startsWith('/wrapped');
+  const isAuthRequired = pathname === '/' || pathname.startsWith('/wrapped') || pathname.startsWith('/investments') || pathname.startsWith('/insights');
   const isGuestOnly = pathname.startsWith('/login') || pathname.startsWith('/register');
 
   if (isAuthRequired && !jwt) {
-    return NextResponse.redirect(new URL('/login', request.url));
+    const url = request.nextUrl.clone();
+    url.pathname = '/login';
+    return NextResponse.redirect(url);
   }
 
   if (isGuestOnly && jwt) {
-    return NextResponse.redirect(new URL('/', request.url));
+    const url = request.nextUrl.clone();
+    url.pathname = '/';
+    return NextResponse.redirect(url);
   }
 
   return NextResponse.next();
