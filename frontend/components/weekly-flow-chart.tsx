@@ -154,9 +154,10 @@ export default function WeeklyFlowChart({ transactions, range }: WeeklyFlowChart
                   fill="#6d5ef9"
                   stroke="#ffffff"
                   strokeWidth="1.5"
-                  title={`₹${pt.value}`}
                   className="chart-dot cursor-pointer"
-                />
+                >
+                  <title>{`₹${pt.value.toLocaleString('en-IN')}`}</title>
+                </circle>
               );
             })}
           </svg>
